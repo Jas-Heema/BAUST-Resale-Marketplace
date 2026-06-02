@@ -1,0 +1,78 @@
+
+BAUST RESALE MARKETPLACE
+Complete Folder Structure
+(keep it in    c:/xampp/htdocs)
+
+
+BAUST_resale/
+│
+├── index.html
+├── login.html
+├── register.html
+├── add-product.html
+├── product.html
+├── my-products.html
+├── my-offers.html
+├── my-purchases.html
+├── messages.html
+├── profile.html
+├── view_profile.html
+├── admin-dashboard.html
+├── setup_admin.php
+├── test_upload.php
+│
+├── assets/
+│   ├── css/
+│   │   ├── style.css
+│   │   └── style-light.css
+│   │
+│   ├── js/
+│   │   └── app.js
+│   │
+│   └── uploads/
+│       ├── default.jpg
+│       └── (uploaded product images & profile pictures)
+│
+├── config/
+│   └── db.php
+│
+├── api/
+│   ├── accept_offer.php
+│   ├── add_product.php
+│   ├── delete_message.php
+│   ├── delete_product.php
+│   ├── edit_product.php
+│   ├── file_complaint.php
+│   ├── get_categories.php
+│   ├── get_conversation_messages.php
+│   ├── get_conversations.php
+│   ├── get_messages.php
+│   ├── get_my_offers.php
+│   ├── get_my_products.php
+│   ├── get_my_purchases.php
+│   ├── get_product.php
+│   ├── get_products.php
+│   ├── get_user.php
+│   ├── get_user_reviews.php
+│   ├── login.php
+│   ├── logout.php
+│   ├── make_offer.php
+│   ├── rate_seller.php
+│   ├── register.php
+│   ├── reject_offer.php
+│   ├── send_message.php
+│   ├── send_reply.php
+│   ├── update_profile.php
+│   ├── upload_profile_picture.php
+│   │
+│   └── admin/
+│       ├── block_user.php
+│       ├── delete_user.php
+│       ├── get_complaints.php
+│       ├── get_users.php
+│       ├── resolve_complaint.php
+│       ├── send_warning.php
+│       └── unblock_user.php
+│
+└── database/
+    └── baust_resale.sql
