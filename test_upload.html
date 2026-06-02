@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Product Upload</title>
+</head>
+<body>
+    <h2>Test Product Upload</h2>
+    <form id="testForm">
+        <input type="text" name="title" placeholder="Title" required><br>
+        <textarea name="description" placeholder="Description"></textarea><br>
+        <input type="number" name="price" placeholder="Price" required><br>
+        <select name="category_id" id="catSelect"></select><br>
+        <button type="submit">Submit</button>
+    </form>
+    <pre id="result"></pre>
+
+    <script>
+        // Load categories
+        fetch('api/get_categories.php')
+            .then(r => r.json())
+            .then(cats => {
+                const sel = document.getElementById('catSelect');
+                sel.innerHTML = '<option value="">Select Category</option>';
+                cats.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c.id;
+                    opt.textContent = c.name;
+                    sel.appendChild(opt);
+                });
+            });
+
+        document.getElementById('testForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            
+            // Add a test image if needed
+            // formData.append('images[]', fileInput.files[0]);
+            
+            const response = await fetch('api/add_product.php', {
+                method: 'POST',
+                body: formData,
+                credentials: 'include'
+            });
+            const text = await response.text();
+            document.getElementById('result').innerText = text;
+            
+            try {
+                const json = JSON.parse(text);
+                if (json.success) {
+                    alert('Product added! ID: ' + json.product_id);
+                } else {
+                    alert('Error: ' + json.error);
+                }
+            } catch(e) {
+                alert('Raw response: ' + text);
+            }
+        };
+    </script>
+</body>
+</html>

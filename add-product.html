@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Add/Edit Product - BAUST Resale</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        .image-preview { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+        .image-preview img { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); }
+        .upload-warning { color: #f59e0b; font-size: 0.8rem; margin-top: 5px; }
+        .upload-success { color: #10b981; font-size: 0.8rem; margin-top: 5px; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand"><a href="index.html">BAUST Resale</a></div>
+        <div class="nav-links"></div>
+    </nav>
+    <div class="form-container">
+        <h2 id="formTitle">Add New Product</h2>
+        <div id="formMessage"></div>
+        <form id="productForm" enctype="multipart/form-data">
+            <div class="form-group">
+                <label>Title *</label>
+                <input type="text" name="title" id="title" required>
+            </div>
+            <div class="form-group">
+                <label>Description *</label>
+                <textarea name="description" id="description" rows="4" required></textarea>
+            </div>
+            <div class="form-group">
+                <label>Price (৳) *</label>
+                <input type="number" step="0.01" name="price" id="price" required>
+            </div>
+            <div class="form-group">
+                <label>Category *</label>
+                <select name="category_id" id="category_id" required>
+                    <option value=""> Select Category </option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Condition</label>
+                <select name="condition" id="condition">
+                    <option value="new">New</option>
+                    <option value="like-new">Like New</option>
+                    <option value="good" selected>Good</option>
+                    <option value="fair">Fair</option>
+                    <option value="poor">Poor</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Location</label>
+                <input type="text" name="location" id="location" placeholder="Exact Location">
+            </div>
+            <div class="form-group" id="statusGroup" style="display:none;">
+                <label>Status</label>
+                <select name="status" id="status">
+                    <option value="available">Available</option>
+                    <option value="sold">Sold</option>
+                    <option value="pending">Pending</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Images (optional, multiple)</label>
+                <input type="file" name="images[]" multiple accept="image/*" id="imageInput">
+                <small>You can upload JPG, PNG, GIF (max 5MB each). Leave empty to use default image.</small>
+                <div class="image-preview" id="imagePreview"></div>
+                <div id="uploadStatus"></div>
+            </div>
+            <button type="submit" id="submitBtn" class="btn">Upload Product</button>
+        </form>
+    </div>
+    <script src="assets/js/app.js"></script>
+    <script>
+        // Image preview
+        document.getElementById('imageInput').addEventListener('change', function(e) {
+            const preview = document.getElementById('imagePreview');
+            preview.innerHTML = '';
+            const files = Array.from(e.target.files);
+            
+            files.forEach(file => {
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = function(ev) {
+                        const img = document.createElement('img');
+                        img.src = ev.target.result;
+                        preview.appendChild(img);
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        });
+        
+        // Load categories
+        async function loadCategories() {
+            const select = document.getElementById('category_id');
+            try {
+                const response = await fetch('api/get_categories.php');
+                const cats = await response.json();
+                
+                if (!cats.length) {
+                    select.innerHTML = '<option value="">No categories found</option>';
+                    return;
+                }
+                
+                select.innerHTML = '<option value="">-- Select Category --</option>';
+                cats.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c.id;
+                    opt.textContent = c.name;
+                    select.appendChild(opt);
+                });
+            } catch (err) {
+                console.error('Failed to load categories:', err);
+                select.innerHTML = '<option value="">Error loading categories</option>';
+            }
+        }
+        
+        loadCategories();
+        
+        // Handle form submission
+        const form = document.getElementById('productForm');
+        const urlParams = new URLSearchParams(window.location.search);
+        const editId = urlParams.get('edit');
+        
+        if (editId) {
+            document.getElementById('formTitle').innerText = 'Edit Product';
+            document.getElementById('statusGroup').style.display = 'block';
+        }
+        
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const submitBtn = document.getElementById('submitBtn');
+            const originalText = submitBtn.textContent;
+            const messageDiv = document.getElementById('formMessage');
+            const uploadStatus = document.getElementById('uploadStatus');
+            
+            submitBtn.disabled = true;
+            submitBtn.textContent = editId ? 'Updating...' : 'Adding...';
+            messageDiv.innerHTML = '';
+            uploadStatus.innerHTML = '';
+            
+            const formData = new FormData(form);
+            let url = 'api/add_product.php';
+            if (editId) {
+                formData.append('id', editId);
+                url = 'api/edit_product.php';
+            }
+            
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'include'
+                });
+                
+                const text = await response.text();
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch(e) {
+                    throw new Error('Server returned: ' + text.substring(0, 200));
+                }
+                
+                if (!response.ok) throw new Error(data.error || 'Upload failed');
+                
+                // Show success message
+                messageDiv.innerHTML = `<span class="upload-success">✓ ${data.message || 'Product added successfully!'}</span>`;
+                
+                // Show image warnings if any
+                if (data.image_warnings && data.image_warnings.length) {
+                    uploadStatus.innerHTML = `<div class="upload-warning">⚠️ ${data.image_warnings.join(', ')}</div>`;
+                }
+                
+                showToast(data.message || 'Product added successfully!', 'success');
+                
+                // Redirect after 1.5 seconds
+                setTimeout(() => {
+                    window.location.href = 'my-products.html';
+                }, 1500);
+                
+            } catch (err) {
+                console.error('Submission error:', err);
+                messageDiv.innerHTML = `<span style="color:#ef4444;">✗ ${err.message}</span>`;
+                showToast('Error: ' + err.message, 'error');
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+            }
+        });
+        
+        // Load edit data if needed
+        if (editId) {
+            fetch(`api/get_product.php?id=${editId}`, { credentials: 'include' })
+                .then(r => r.json())
+                .then(p => {
+                    document.getElementById('title').value = p.title;
+                    document.getElementById('description').value = p.description;
+                    document.getElementById('price').value = p.price;
+                    document.getElementById('condition').value = p.condition;
+                    document.getElementById('location').value = p.location;
+                    setTimeout(() => {
+                        document.getElementById('category_id').value = p.category_id;
+                        if (document.getElementById('status')) {
+                            document.getElementById('status').value = p.status;
+                        }
+                    }, 500);
+                })
+                .catch(e => console.error('Error loading product:', e));
+        }
+    </script>
+</body>
+</html>

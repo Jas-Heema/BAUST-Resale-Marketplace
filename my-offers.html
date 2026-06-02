@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Offers Received - BAUST Resale</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        .offers-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        .offers-table th, 
+        .offers-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+        .offers-table th {
+            background: var(--bg-secondary);
+            font-weight: bold;
+        }
+        .status-pending {
+            color: #f59e0b;
+            font-weight: bold;
+        }
+        .status-accepted {
+            color: #10b981;
+            font-weight: bold;
+        }
+        .status-rejected {
+            color: #ef4444;
+            font-weight: bold;
+        }
+        .btn-sm {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.8rem;
+            margin-right: 0.25rem;
+            cursor: pointer;
+            border: none;
+            border-radius: 4px;
+        }
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand"><a href="index.html">BAUST Resale</a></div>
+        <div class="nav-links"></div>
+    </nav>
+    <div class="container">
+        <h1>Offers Received</h1>
+        <div id="offersContent">
+            <div class="empty-state">Loading offers...</div>
+        </div>
+    </div>
+    <script src="assets/js/app.js"></script>
+    <script>
+        async function loadMyOffers() {
+            const container = document.getElementById('offersContent');
+            container.innerHTML = '<div class="empty-state">Loading offers...</div>';
+            
+            try {
+                const offers = await fetchAPI('api/get_my_offers.php');
+                
+                if (!offers || offers.length === 0) {
+                    container.innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i><br>No offers received yet.<br><small>When buyers make offers on your products, they will appear here.</small></div>';
+                    return;
+                }
+                
+                // Create table
+                const table = document.createElement('table');
+                table.className = 'offers-table';
+                table.innerHTML = `
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Buyer</th>
+                            <th>Offer Price</th>
+                            <th>Message</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${offers.map(o => `
+                            <tr>
+                                <td><strong>${escapeHtml(o.product_title)}</strong></td>
+                                <td><a href="view_profile.html?id=${o.buyer_id}">${escapeHtml(o.buyer_name)}</a></td>
+                                <td>৳ ${parseFloat(o.offer_price).toFixed(2)}</td>
+                                <td>${escapeHtml(o.message || '-')}</td>
+                                <td class="status-${o.status}">${o.status.toUpperCase()}</td>
+                                <td>${new Date(o.created_at).toDateString()}</td>
+                                <td>
+                                    ${o.status === 'pending' ? `
+                                        <button onclick="window.acceptOffer(${o.id})" class="btn-sm btn-success">Accept</button>
+                                        <button onclick="window.rejectOffer(${o.id})" class="btn-sm btn-danger">Reject</button>
+                                    ` : '-'}
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                `;
+                container.innerHTML = '';
+                container.appendChild(table);
+                
+            } catch(e) {
+                console.error('Error loading offers:', e);
+                container.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><br>Error loading offers. Please refresh.</div>';
+            }
+        }
+        
+        // Override the window functions
+        window.acceptOffer = async (id) => {
+            if (confirm('Accept this offer? Product will be marked sold.')) {
+                try {
+                    await fetchAPI(`api/accept_offer.php?id=${id}`, { method: 'POST' });
+                    showToast('Offer accepted', 'success');
+                    loadMyOffers();
+                } catch(e) {
+                    showToast(e.message, 'error');
+                }
+            }
+        };
+        
+        window.rejectOffer = async (id) => {
+            if (confirm('Reject this offer?')) {
+                try {
+                    await fetchAPI(`api/reject_offer.php?id=${id}`, { method: 'POST' });
+                    showToast('Offer rejected', 'info');
+                    loadMyOffers();
+                } catch(e) {
+                    showToast(e.message, 'error');
+                }
+            }
+        };
+        
+        // Load offers when page loads
+        loadMyOffers();
+    </script>
+</body>
+</html>

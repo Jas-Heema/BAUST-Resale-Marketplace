@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>BAUST Resale - Home</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Force dark mode styles for all dropdowns */
+        select, .filter-group select, #categorySelect {
+            background-color: #1e293b !important;
+            color: #f1f5f9 !important;
+            border: 2px solid #334155 !important;
+            border-radius: 12px !important;
+            padding: 12px 16px !important;
+            font-size: 1rem !important;
+            font-weight: 500 !important;
+            cursor: pointer !important;
+            appearance: none !important;
+            -webkit-appearance: none !important;
+            -moz-appearance: none !important;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23667eea' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E") !important;
+            background-repeat: no-repeat !important;
+            background-position: right 12px center !important;
+            background-size: 20px !important;
+        }
+        
+        /* Dropdown options styling */
+        select option, #categorySelect option {
+            background-color: #0f172a !important;
+            color: #f1f5f9 !important;
+            padding: 12px !important;
+            font-size: 0.95rem !important;
+        }
+        
+        /* Hover effect on options */
+        select option:hover, #categorySelect option:hover {
+            background-color: #667eea !important;
+            color: white !important;
+        }
+        
+        /* Focus state */
+        select:focus, #categorySelect:focus {
+            outline: none !important;
+            border-color: #667eea !important;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2) !important;
+        }
+        
+        .filter-section {
+            margin: 2rem 0;
+            padding: 1.5rem;
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .filter-form {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            align-items: flex-end;
+        }
+        
+        .filter-group {
+            flex: 1;
+            min-width: 220px;
+        }
+        
+        .filter-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: var(--text-primary);
+            letter-spacing: 0.5px;
+        }
+        
+        .filter-group label i {
+            margin-right: 8px;
+            color: var(--accent);
+        }
+        
+        .filter-group input {
+            width: 100%;
+            padding: 12px 16px;
+            font-size: 1rem;
+            font-weight: 500;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+        
+        .filter-group input::placeholder {
+            color: var(--text-secondary);
+            font-weight: normal;
+            opacity: 0.7;
+        }
+        
+        .filter-group input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+        }
+        
+        .btn-search {
+            padding: 12px 28px;
+            font-size: 1rem;
+            font-weight: bold;
+            height: auto;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-search i {
+            margin-right: 8px;
+        }
+        
+        .btn-search:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .clear-btn {
+            background: var(--bg-primary);
+            border: 2px solid var(--border);
+            color: var(--text-secondary);
+        }
+        
+        .clear-btn:hover {
+            background: var(--border);
+            color: var(--text-primary);
+            transform: translateY(-2px);
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+        
+        .product-card {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            border: 1px solid var(--border);
+        }
+        
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            border-color: var(--accent);
+        }
+        
+        .product-card img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+        
+        .product-info {
+            padding: 1.25rem;
+        }
+        
+        .product-title {
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+        
+        .product-price {
+            color: var(--accent);
+            font-weight: bold;
+            font-size: 1.25rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .product-meta {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            margin-bottom: 1rem;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            border: 1px solid var(--border);
+        }
+        
+        .empty-state i {
+            font-size: 3rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+        
+        .loading-spinner {
+            text-align: center;
+            padding: 3rem;
+        }
+        
+        @media (max-width: 768px) {
+            .filter-group {
+                min-width: 100%;
+            }
+            .btn-group {
+                flex-direction: column;
+            }
+            .btn-search {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand"><a href="index.html">BAUST Resale</a></div>
+        <div class="nav-links"></div>
+    </nav>
+    <div class="container">
+        <h1><i class="fas fa-store"></i> Available Items</h1>
+        
+        <div class="filter-section">
+            <div class="filter-form">
+                <div class="filter-group">
+                    <label><i class="fas fa-search"></i> SEARCH PRODUCTS</label>
+                    <input type="text" id="searchInput" placeholder="🔍 Search by title or description..." autocomplete="off">
+                </div>
+                <div class="filter-group">
+                    <label><i class="fas fa-filter"></i> CATEGORY</label>
+                    <select id="categorySelect">
+                        <option value="">📂 All Categories</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>&nbsp;</label>
+                    <div class="btn-group">
+                        <button id="searchBtn" class="btn btn-search"><i class="fas fa-search"></i> Search</button>
+                        <button id="clearBtn" class="btn btn-search clear-btn"><i class="fas fa-times"></i> Clear</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="productsGrid" class="products-grid">
+            <div class="loading-spinner">Loading products...</div>
+        </div>
+    </div>
+    
+    <script src="assets/js/app.js"></script>
+    <script>
+        async function loadCategories() {
+            const select = document.getElementById('categorySelect');
+            if (!select) return;
+            
+            try {
+                const response = await fetch('api/get_categories.php');
+                const cats = await response.json();
+                
+                if (cats && cats.length) {
+                    select.innerHTML = '<option value="">📂 All Categories</option>';
+                    cats.forEach(cat => {
+                        const option = document.createElement('option');
+                        option.value = cat.id;
+                        option.textContent = cat.name;
+                        select.appendChild(option);
+                    });
+                }
+            } catch(e) {
+                console.error('Failed to load categories:', e);
+                select.innerHTML = '<option value="">⚠️ Error loading categories</option>';
+            }
+        }
+        
+        function setupSearch() {
+            const searchBtn = document.getElementById('searchBtn');
+            const clearBtn = document.getElementById('clearBtn');
+            const searchInput = document.getElementById('searchInput');
+            const categorySelect = document.getElementById('categorySelect');
+            
+            if (searchBtn) {
+                searchBtn.addEventListener('click', () => {
+                    const search = searchInput.value.trim();
+                    const category = categorySelect.value;
+                    if (typeof loadProducts === 'function') {
+                        loadProducts(search, category);
+                    }
+                });
+            }
+            
+            if (clearBtn) {
+                clearBtn.addEventListener('click', () => {
+                    searchInput.value = '';
+                    categorySelect.value = '';
+                    if (typeof loadProducts === 'function') {
+                        loadProducts('', '');
+                    }
+                });
+            }
+            
+            if (searchInput) {
+                searchInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        const search = searchInput.value.trim();
+                        const category = categorySelect.value;
+                        if (typeof loadProducts === 'function') {
+                            loadProducts(search, category);
+                        }
+                    }
+                });
+            }
+            
+            if (categorySelect) {
+                categorySelect.addEventListener('change', () => {
+                    const search = searchInput.value.trim();
+                    if (typeof loadProducts === 'function') {
+                        loadProducts(search, categorySelect.value);
+                    }
+                });
+            }
+        }
+        
+        loadCategories();
+        setupSearch();
+    </script>
+</body>
+</html>

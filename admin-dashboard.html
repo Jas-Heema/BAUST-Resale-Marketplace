@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard - BAUST Resale</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        .admin-tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.5rem;
+            flex-wrap: wrap;
+        }
+        .admin-tab {
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            background: none;
+            border: none;
+            font-size: 1rem;
+            color: var(--text-primary);
+            transition: all 0.2s;
+        }
+        .admin-tab:hover {
+            background: var(--bg-secondary);
+            border-radius: 8px;
+        }
+        .admin-tab.active {
+            border-bottom: 2px solid var(--accent);
+            color: var(--accent);
+            font-weight: bold;
+        }
+        .admin-section {
+            display: none;
+        }
+        .admin-section.active {
+            display: block;
+        }
+        .user-card, .complaint-card {
+            border: 1px solid var(--border);
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 8px;
+            background: var(--bg-secondary);
+        }
+        .btn-sm {
+            padding: 0.2rem 0.5rem;
+            font-size: 0.8rem;
+            margin-right: 0.5rem;
+            cursor: pointer;
+            border: none;
+            border-radius: 4px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+        .form-control {
+            width: 100%;
+            padding: 0.5rem;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            color: var(--text-primary);
+        }
+        .status-pending { color: #f59e0b; font-weight: bold; }
+        .status-resolved { color: #10b981; font-weight: bold; }
+        .status-dismissed { color: #6b7280; font-weight: bold; }
+        .badge {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+        }
+        .badge-blocked { background: #ef4444; color: white; }
+        .badge-active { background: #10b981; color: white; }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .stat-card {
+            background: var(--bg-secondary);
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--accent);
+        }
+        .stat-label {
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+        }
+        .search-box {
+            margin-bottom: 1rem;
+            padding: 0.5rem;
+            width: 300px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand"><a href="index.html">BAUST Resale</a></div>
+        <div class="nav-links"></div>
+    </nav>
+    <div class="container">
+        <h1><i class="fas fa-shield-alt"></i> Admin Dashboard</h1>
+        
+        <!-- Statistics -->
+        <div class="stats-grid" id="statsGrid">
+            <div class="stat-card">
+                <div class="stat-number" id="totalUsers">0</div>
+                <div class="stat-label">Total Users</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="blockedUsers">0</div>
+                <div class="stat-label">Blocked Users</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="pendingComplaints">0</div>
+                <div class="stat-label">Pending Complaints</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="totalComplaints">0</div>
+                <div class="stat-label">Total Complaints</div>
+            </div>
+        </div>
+        
+        <!-- Tabs -->
+        <div class="admin-tabs">
+            <button class="admin-tab active" data-tab="users"><i class="fas fa-users"></i> Users</button>
+            <button class="admin-tab" data-tab="complaints"><i class="fas fa-flag"></i> Complaints</button>
+            <button class="admin-tab" data-tab="warnings"><i class="fas fa-exclamation-triangle"></i> Issue Warning</button>
+        </div>
+        
+        <!-- Users Section -->
+        <div id="usersSection" class="admin-section active">
+            <h2>Manage Users</h2>
+            <input type="text" id="userSearch" placeholder="Search by name or email..." class="search-box">
+            <div id="usersList">Loading users...</div>
+        </div>
+        
+        <!-- Complaints Section -->
+        <div id="complaintsSection" class="admin-section">
+            <h2>Reports / Complaints</h2>
+            <div id="complaintsList">Loading complaints...</div>
+        </div>
+        
+        <!-- Issue Warning Section -->
+        <div id="warningsSection" class="admin-section">
+            <h2>Send Warning to User</h2>
+            <div class="form-group">
+                <label>Select User</label>
+                <select id="warningUserId" class="form-control">
+                    <option value="">-- Select User --</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Warning Message</label>
+                <textarea id="warningMessage" rows="4" class="form-control" placeholder="Enter warning message..."></textarea>
+            </div>
+            <button id="sendWarningBtn" class="btn">Send Warning</button>
+            <div id="warningResult"></div>
+        </div>
+    </div>
+    
+    <script src="assets/js/app.js"></script>
+    <script>
+        // Check if user is admin, redirect if not
+        (async () => {
+            try {
+                const data = await fetchAPI('api/get_user.php');
+                if (!data.loggedIn || data.user.role !== 'admin') {
+                    window.location.href = 'index.html';
+                }
+            } catch(e) {
+                window.location.href = 'index.html';
+            }
+        })();
+        
+        // Tab switching
+        document.querySelectorAll('.admin-tab').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.admin-tab').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                const tab = btn.dataset.tab;
+                document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
+                document.getElementById(`${tab}Section`).classList.add('active');
+                if (tab === 'users') loadUsers();
+                if (tab === 'complaints') loadComplaints();
+                if (tab === 'warnings') loadUserSelect();
+            });
+        });
+        
+        // Load statistics
+        async function loadStats() {
+            try {
+                const users = await fetchAPI('api/admin/get_users.php');
+                const complaints = await fetchAPI('api/admin/get_complaints.php');
+                document.getElementById('totalUsers').innerText = users.length;
+                document.getElementById('blockedUsers').innerText = users.filter(u => u.is_blocked).length;
+                document.getElementById('pendingComplaints').innerText = complaints.filter(c => c.status === 'pending').length;
+                document.getElementById('totalComplaints').innerText = complaints.length;
+            } catch(e) {}
+        }
+        
+        // Load users list
+        async function loadUsers() {
+            const container = document.getElementById('usersList');
+            container.innerHTML = 'Loading...';
+            try {
+                const users = await fetchAPI('api/admin/get_users.php');
+                if (!users.length) {
+                    container.innerHTML = '<p>No users found.</p>';
+                    return;
+                }
+                container.innerHTML = `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Joined</th><th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${users.map(u => `
+                                <tr>
+                                    <td>${u.id}</td>
+                                    <td>${escapeHtml(u.name)}</td>
+                                    <td>${escapeHtml(u.email)}</td>
+                                    <td>${u.role === 'admin' ? '<span class="badge" style="background:#667eea;">Admin</span>' : 'User'}</td>
+                                    <td>${u.is_blocked ? '<span class="badge badge-blocked">Blocked</span>' : '<span class="badge badge-active">Active</span>'}</td>
+                                    <td>${new Date(u.created_at).toDateString()}</td>
+                                    <td>
+                                        ${!u.is_blocked && u.role !== 'admin' ? `<button onclick="blockUser(${u.id})" class="btn-sm">Block</button>` : ''}
+                                        ${u.is_blocked ? `<button onclick="unblockUser(${u.id})" class="btn-sm">Unblock</button>` : ''}
+                                        ${u.role !== 'admin' ? `<button onclick="deleteUser(${u.id})" class="btn-sm btn-danger">Delete</button>` : ''}
+                                        <button onclick="showWarningModal(${u.id}, '${escapeHtml(u.name)}')" class="btn-sm">Send Warning</button>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+                await loadStats();
+            } catch(e) {
+                container.innerHTML = '<p>Error loading users.</p>';
+                console.error(e);
+            }
+        }
+        
+        // User search filter
+        document.getElementById('userSearch')?.addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('#usersList table tbody tr');
+            rows.forEach(row => {
+                const text = row.innerText.toLowerCase();
+                row.style.display = text.includes(term) ? '' : 'none';
+            });
+        });
+        
+        // Block/Unblock/Delete functions
+        window.blockUser = async (userId) => {
+            if (confirm('Block this user? They will not be able to log in.')) {
+                await fetchAPI('api/admin/block_user.php', { method: 'POST', body: JSON.stringify({ user_id: userId }), headers: { 'Content-Type': 'application/json' } });
+                showToast('User blocked', 'success');
+                loadUsers();
+            }
+        };
+        
+        window.unblockUser = async (userId) => {
+            await fetchAPI('api/admin/unblock_user.php', { method: 'POST', body: JSON.stringify({ user_id: userId }), headers: { 'Content-Type': 'application/json' } });
+            showToast('User unblocked', 'success');
+            loadUsers();
+        };
+        
+        window.deleteUser = async (userId) => {
+            if (confirm('Permanently delete this user and all their data? This cannot be undone.')) {
+                await fetchAPI('api/admin/delete_user.php', { method: 'DELETE', body: JSON.stringify({ user_id: userId }), headers: { 'Content-Type': 'application/json' } });
+                showToast('User deleted', 'success');
+                loadUsers();
+            }
+        };
+        
+        // Load complaints
+        async function loadComplaints() {
+            const container = document.getElementById('complaintsList');
+            container.innerHTML = 'Loading complaints...';
+            try {
+                const complaints = await fetchAPI('api/admin/get_complaints.php');
+                if (!complaints.length) {
+                    container.innerHTML = '<p>No complaints filed yet.</p>';
+                    return;
+                }
+                container.innerHTML = complaints.map(c => `
+                    <div class="complaint-card">
+                        <strong><i class="fas fa-user"></i> From:</strong> ${escapeHtml(c.complainant_name)} (ID: ${c.complainant_id})<br>
+                        <strong><i class="fas fa-user-slash"></i> Against:</strong> ${escapeHtml(c.reported_name)} (ID: ${c.reported_user_id})<br>
+                        <strong><i class="fas fa-box"></i> Product:</strong> ${c.product_title ? escapeHtml(c.product_title) : 'General complaint'}<br>
+                        <strong><i class="fas fa-comment"></i> Message:</strong><br>
+                        <div style="background: var(--bg-primary); padding: 0.5rem; border-radius: 4px; margin: 0.5rem 0;">${escapeHtml(c.message)}</div>
+                        <strong><i class="fas fa-clock"></i> Date:</strong> ${new Date(c.created_at).toLocaleString()}<br>
+                        <strong><i class="fas fa-tag"></i> Status:</strong> <span class="status-${c.status}">${c.status.toUpperCase()}</span><br>
+                        ${c.admin_response ? `<strong><i class="fas fa-reply"></i> Admin Response:</strong> ${escapeHtml(c.admin_response)}<br>` : ''}
+                        <div style="margin-top: 1rem;">
+                            <textarea id="response-${c.id}" placeholder="Admin response (optional)" rows="2" style="width: 100%; padding: 0.5rem; margin-bottom: 0.5rem; background: var(--bg-primary); border: 1px solid var(--border); border-radius: 4px; color: var(--text-primary);"></textarea>
+                            <div>
+                                <button onclick="resolveComplaint(${c.id}, 'resolved')" class="btn-sm" style="background: #10b981; color: white;">✓ Resolve</button>
+                                <button onclick="resolveComplaint(${c.id}, 'dismissed')" class="btn-sm" style="background: #6b7280; color: white;">✗ Dismiss</button>
+                                <button onclick="blockReportedUser(${c.reported_user_id})" class="btn-sm" style="background: #ef4444; color: white;">🚫 Block User</button>
+                                <button onclick="warnReportedUser(${c.reported_user_id}, ${c.id})" class="btn-sm" style="background: #f59e0b; color: white;">⚠️ Send Warning</button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+                await loadStats();
+            } catch(e) {
+                container.innerHTML = '<p>Error loading complaints.</p>';
+                console.error(e);
+            }
+        }
+        
+        // Resolve complaint
+        window.resolveComplaint = async (complaintId, status) => {
+            const responseText = document.getElementById(`response-${complaintId}`).value;
+            await fetchAPI('api/admin/resolve_complaint.php', {
+                method: 'POST',
+                body: JSON.stringify({ complaint_id: complaintId, status, admin_response: responseText }),
+                headers: { 'Content-Type': 'application/json' }
+            });
+            showToast(`Complaint ${status}`, 'success');
+            loadComplaints();
+        };
+        
+        // Block reported user
+        window.blockReportedUser = async (userId) => {
+            if (confirm('Block this user?')) {
+                await fetchAPI('api/admin/block_user.php', { method: 'POST', body: JSON.stringify({ user_id: userId }), headers: { 'Content-Type': 'application/json' } });
+                showToast('User blocked', 'success');
+                loadComplaints();
+                loadUsers();
+            }
+        };
+        
+        // Warn reported user
+        window.warnReportedUser = async (userId, complaintId) => {
+            const warningMsg = prompt('Enter warning message for this user:');
+            if (warningMsg) {
+                await fetchAPI('api/admin/send_warning.php', {
+                    method: 'POST',
+                    body: JSON.stringify({ user_id: userId, message: warningMsg }),
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                showToast('Warning sent', 'success');
+                resolveComplaint(complaintId, 'resolved');
+            }
+        };
+        
+        // Load user select for warnings
+        async function loadUserSelect() {
+            try {
+                const users = await fetchAPI('api/admin/get_users.php');
+                const select = document.getElementById('warningUserId');
+                select.innerHTML = '<option value="">-- Select User --</option>' + 
+                    users.filter(u => u.role !== 'admin').map(u => `<option value="${u.id}">${escapeHtml(u.name)} (${escapeHtml(u.email)})</option>`).join('');
+            } catch(e) {}
+        }
+        
+        // Send warning
+        document.getElementById('sendWarningBtn').onclick = async () => {
+            const userId = document.getElementById('warningUserId').value;
+            const message = document.getElementById('warningMessage').value;
+            if (!userId || !message) {
+                showToast('Please select user and enter a warning message', 'error');
+                return;
+            }
+            try {
+                await fetchAPI('api/admin/send_warning.php', {
+                    method: 'POST',
+                    body: JSON.stringify({ user_id: parseInt(userId), message: message }),
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                showToast('Warning sent successfully', 'success');
+                document.getElementById('warningMessage').value = '';
+                document.getElementById('warningUserId').value = '';
+            } catch(e) {
+                showToast(e.message, 'error');
+            }
+        };
+        
+        window.showWarningModal = (userId, userName) => {
+            document.getElementById('warningUserId').value = userId;
+            document.getElementById('warningsSection').classList.add('active');
+            document.querySelector('.admin-tab[data-tab="warnings"]').click();
+            document.getElementById('warningMessage').focus();
+        };
+        
+        // Initialize
+        loadUsers();
+        loadStats();
+    </script>
+</body>
+</html>
